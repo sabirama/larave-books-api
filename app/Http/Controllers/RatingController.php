@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rating;
+use App\Http\Resources\RatingResource;
+
 use Illuminate\Http\Request;
 
 class RatingController extends Controller
@@ -10,8 +12,9 @@ class RatingController extends Controller
     public function index() {
         try {
             $rate = Rating::leftJoin('books', 'ratings.book_id', 'books.id')
-            ->leftJoin('users', 'ratings.user_id', 'users.id')->get(['book_id','title', 'username','rate', 'comment']);
-            return response()->json(['rate' => $rate], 200);
+            ->leftJoin('users', 'ratings.user_id', 'users.id')
+            ->get();
+            return response()->json(['rate' => RatingResource::collection($rate)], 200);
         }
         catch (\Exceptions $e) {
             return response()->json(['error' => 'Server Error.'], 500);
@@ -21,12 +24,12 @@ class RatingController extends Controller
     public function show($id) {
        try {
             $rate = Rating::leftJoin('books', 'ratings.book_id', 'books.id')
-            ->leftJoin('users', 'ratings.user_id', 'users.id')->get(['book_id','title', 'username','rate', 'comment'])
+            ->leftJoin('users', 'ratings.user_id', 'users.id')->get()
             ->where('book_id', $id)->all();
             if ($rate == []) {
                 return response()->json(['message' => 'Rate not found!'], 201);
             }
-            return response()->json([$rate], 200);
+            return response()->json([new RatingResource($rate)], 200);
        }
        catch (\Exception $e) {
         return response()->json(['error' => 'Server Error.'], 500);

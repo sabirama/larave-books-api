@@ -15,11 +15,13 @@ class BookGenres extends Model
         'genre_id',
     ];
 
-    public function book() {
+    public function book() : BelongsTo
+     {
         return $this->belongsTo(Book::class, 'id', 'book_id');
     }
 
-    public function genre() {
+    public function genre() : HasMany
+    {
         return $this->hasMany(Genre::class, 'id', 'genre_id');
     }
 }

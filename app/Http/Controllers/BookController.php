@@ -7,36 +7,26 @@ use App\Models\Author;
 use App\Models\Genre;
 use App\Models\BookAuthors;
 use App\Models\BookGenres;
+use App\Http\Resources\BookResource;
 
 use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
     public function index() {
-        $book = Book::with('genres', 'authors')->get();
-        return response()->json(['data' => $book],200);
+        $book = Book::with('author', 'genre')->get();
+        return response()->json(['data' => BookResource::collection($book)],200);
     }
 
     public function show($id) {
         try {
-            $book = Book::find($id);
+            $book = Book::with('author', 'genre')->find($id);
 
             if (!$book) {
                 return response()->json(['data' => 'Book does not exist!'], 200);
             }
 
-            $author = Author::select('id', 'name')->find($book->authors);
-            $genre = Genre::select('id', 'name')->find($book->genres);
-
-            $book = [
-                'title' => $book->title,
-                'details' => $book->details,
-                'price' => $book->price,
-                'authors' => $author,
-                'genres' => $genre
-            ];
-
-            return response()->json(['data' => $book],200);
+            return response()->json(['data' => new BookResource($book)],200);
         }
         catch (Exceptions $e) {
             return response()->json(['error' => 'Server Error.'],500);
@@ -97,7 +87,7 @@ class BookController extends Controller
                     'title' => $book->title,
                     'details' => $book->details,
                     'price' => $book->price,
-                    'author' => $author,
+                    'author' => $author->get(['id','name']),
                     'genre' => $genre,
 
                 ];

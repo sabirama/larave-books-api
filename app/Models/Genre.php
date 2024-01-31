@@ -14,7 +14,8 @@ class Genre extends Model
         'name',
     ];
 
-    public function BookGenre() {
+    public function BookGenre() : BelongsTo
+    {
         return $this->belongsTo(BookGenres::class, 'genre_id', 'id');
     }
 }
