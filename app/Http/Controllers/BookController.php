@@ -9,6 +9,7 @@ use App\Models\BookAuthors;
 use App\Models\BookGenres;
 use App\Http\Resources\BookResource;
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
 class BookController extends Controller
@@ -66,6 +67,38 @@ class BookController extends Controller
             return response()->json(['data'=> $book, 'message' => 'Book created!'], 200);
         } catch (\Exceptions $e) {
             return response()->json(['error' => 'Server Error'], 500);
+        }
+    }
+
+    public function addCover(Request $request, $id) {
+        try {
+            $validImage = $request->validate(['image' => 'mimes:jpeg,png,jpg']);
+
+           if ($validImage) {
+
+            $book = Book::find($id);
+                if ($book) {
+                    if (Storage::exists('/public/book/'.$id)) {
+                        Storage::deleteDirectory('/public/book/'.$id);
+                    }
+
+                    $file = $request->file('image');
+                    $filename = 'book-' . $id . "-cover-" . date('M-D-Y') . time() . '.' .$file->getClientOriginalExtension();
+                    $file->storeAs('public/book/'.$id.'/',$filename);
+                    $filepath = '/storage/book/'.$id.'/'.$filename;
+
+                    $book->update([
+                        'cover_image' => $filepath
+                    ]);
+                    return response()->json(['message' => 'Cover image added to book.'], 200);
+                }
+                return response()->json(['message' => 'Book does not exist'], 201);
+           }
+
+           return response()->json(['message' => 'Not a valid image. Supported files are jpg, jpeg and png.'], 201);
+        }
+        catch (\Exception $e) {
+            return response()->json(['error' => 'Server Error.'], 500);
         }
     }
 

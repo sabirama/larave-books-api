@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('first_name', 50)->default('first name');
             $table->string('last_name', 50)->default('last name');
             $table->string('address', 150)->default('address');
+            $table->string('profile_image')->nullable();
             $table->timestamps();
         });
     }

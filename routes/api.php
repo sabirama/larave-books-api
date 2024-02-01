@@ -19,7 +19,7 @@ use App\Http\Controllers\RatingController;
 */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+    return $request->user()->load('userDetails');
 });
 
 Route::group(['middleware' => 'auth:sanctum'], function() {
@@ -28,6 +28,7 @@ Route::group(['middleware' => 'auth:sanctum'], function() {
     Route::put('/user/{id}', [UserController::class, 'updateUserDetails']);
 
     Route::post('/book', [BookController::class, 'create']);
+    Route::post('/book/{id}', [BookController::class, 'addCover']);
     Route::put('/book/{id}', [BookController::class, 'update']);
     Route::delete('/book/{id}', [BookController::class, 'destroy']);
 

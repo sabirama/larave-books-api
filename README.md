@@ -29,6 +29,7 @@ user/{id} "Add or update user details."
     *first_name
     *last_name
     *address
+    *image
 
 book "Create (POST) a book or show (GET) all books in database."
     *title

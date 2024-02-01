@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('title', 100);
             $table->longText('details');
             $table->float('price');
+            $table->string('cover_image')->nullable();
             $table->timestamps();
         });
     }

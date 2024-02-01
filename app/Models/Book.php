@@ -15,6 +15,7 @@ class Book extends Model
         'title',
         'details',
         'price',
+        'cover_image'
     ];
 
     public function genres(): HasMany
