@@ -109,25 +109,23 @@ class BookController extends Controller
                     return response()->json(['message' => 'book not found.'],404);
                 }
 
-                $book->update($request->all());
-                $author = $this->createOrFindAuthor($request->input('author'));
-                $genre = $this->createOrFindGenre($request->input('genre'));
+                if($request->input('title') || $request->input('details') || $request->input('price')) {
+                    $book->update($request->all());
+                }
 
-                $request->author ? $bookAuthors = BookAuthors::create(['author_id' => $author->id, 'book_id' => $book->id]) : $bookAuthors = null;
-                $request->genre ?  $bookGenres = BookGenres::create(['genre_id' => $genre->id, 'book_id'=> $book->id]) : $bookGenres = null;
+                if ($request->author) {
+                    $author = $this->createOrFindAuthor($request->input('author'));
+                    $bookAuthors = BookAuthors::firstOrCreate(['author_id' => $author->id, 'book_id' => $book->id]);
+                }
 
-                $book = [
-                    'title' => $book->title,
-                    'details' => $book->details,
-                    'price' => $book->price,
-                    'author' => $author->get(['id','name']),
-                    'genre' => $genre,
+                if ($request->genre) {
+                    $genre = $this->createOrFindGenre($request->input('genre'));
+                    $bookGenres = BookGenres::firstOrCreate(['genre_id' => $genre->id, 'book_id'=> $book->id]);
+                }
 
-                ];
-
-                return response()->json(['data' => $book, 'message' => 'Book updated!'], 200);
+                return response()->json(['data' => new BookResource($book), 'message' => 'Book updated!'], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Server Error'], 500);
+            return response()->json(['error' => 'Server Error.'], 500);
         }
     }
 
