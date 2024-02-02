@@ -9,9 +9,13 @@ use Illuminate\Http\Request;
 
 class RatingController extends Controller
 {
-    public function index() {
+    public function index(Request $request) {
+        $pageSize = $request->page_size ? $request->page_size : 50;
+        $pageNumber = $request->page_on ? $request->page_on : 1;
+
         try {
-            $rate = Rating::with('book', 'user')->get();
+            $rate = Rating::paginate($pageSize, ['*'], 'page', $pageNumber)
+            ->load('book', 'user');
             return response()->json(['rate' => RatingResource::collection($rate)], 200);
         }
         catch (\Exceptions $e) {
@@ -19,10 +23,13 @@ class RatingController extends Controller
         }
     }
 
-    public function show($id) {
+    public function show(Request $request, $id) {
+        $pageSize = $request->page_size ? $request->page_size : 50;
+        $pageNumber = $request->page_on ? $request->page_on : 1;
 
        try {
-            $rate = Rating::with('book', 'user')->where('book_id', $id)->get();
+            $rate = Rating::where('book_id', $id)->paginate($pageSize, ['*'], 'page', $pageNumber)
+            ->load('book', 'user');
             if ($rate->count() === 0) {
                 return response()->json(['message' => 'No Rating for this book yet. Be the first to rate it!'], 201);
             }
