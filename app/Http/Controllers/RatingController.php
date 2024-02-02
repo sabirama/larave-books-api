@@ -11,9 +11,7 @@ class RatingController extends Controller
 {
     public function index() {
         try {
-            $rate = Rating::leftJoin('books', 'ratings.book_id', 'books.id')
-            ->leftJoin('users', 'ratings.user_id', 'users.id')
-            ->get();
+            $rate = Rating::with('book', 'user')->get();
             return response()->json(['rate' => RatingResource::collection($rate)], 200);
         }
         catch (\Exceptions $e) {
@@ -22,14 +20,13 @@ class RatingController extends Controller
     }
 
     public function show($id) {
+
        try {
-            $rate = Rating::leftJoin('books', 'ratings.book_id', 'books.id')
-            ->leftJoin('users', 'ratings.user_id', 'users.id')->get()
-            ->where('book_id', $id)->all();
-            if ($rate == []) {
-                return response()->json(['message' => 'Rate not found!'], 201);
+            $rate = Rating::with('book', 'user')->where('book_id', $id)->get();
+            if ($rate->count() === 0) {
+                return response()->json(['message' => 'No Rating for this book yet. Be the first to rate it!'], 201);
             }
-            return response()->json([new RatingResource($rate)], 200);
+            return response()->json(['data' => RatingResource::collection($rate)], 200);
        }
        catch (\Exception $e) {
         return response()->json(['error' => 'Server Error.'], 500);
@@ -47,7 +44,7 @@ class RatingController extends Controller
 
     public function update(Request $request, $id) {
         try {
-            $rate = find($id);
+            $rate = Rating::find($id);
 
             if(!$rate) {
                 return response()->json(['message' => 'Rate not found!'], 201);

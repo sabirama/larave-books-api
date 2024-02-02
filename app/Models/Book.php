@@ -28,6 +28,11 @@ class Book extends Model
         return $this->hasMany(BookAuthors::class, 'book_id', 'id');
     }
 
+    public function rating(): HasMany
+    {
+        return $this->hasMany(Rating::class, 'book_id', 'id');
+    }
+
     public function genre(): HasManyThrough
     {
         return $this->hasManyThrough(Genre::class, BookGenres::class, 'book_id', 'id', 'id', 'genre_id');

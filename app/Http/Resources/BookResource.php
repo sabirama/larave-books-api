@@ -32,6 +32,14 @@ class BookResource extends JsonResource
                     'name' => $gen->name
                 ];
             }),
+            'rating' => $this->rating->map(function ($rate) {
+                return [
+                    'id' => $rate->id,
+                    'user_id' => $rate->user_id,
+                    'rate' => $rate->rate,
+                    'comment' => $rate->comment,
+                ];
+            }),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at
         ];

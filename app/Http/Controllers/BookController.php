@@ -27,7 +27,7 @@ class BookController extends Controller
             }
 
             $books = $booksQuery->paginate($pageSize, ['*'], 'page', $pageNumber);
-            $books->load('author', 'genre');
+            $books->load('author', 'genre', 'rating');
 
             $currentPage = $pageNumber;
 
@@ -41,7 +41,7 @@ class BookController extends Controller
 
     public function show($id) {
         try {
-            $book = Book::with('author', 'genre')->find($id);
+            $book = Book::with('author', 'genre', 'rating')->find($id);
 
             if (!$book) {
                 return response()->json(['data' => 'Book does not exist!'], 201);
