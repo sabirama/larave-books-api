@@ -14,10 +14,16 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    public function index() {
+    public function index(Request $request) {
         try {
-            $book = Book::with('author', 'genre')->get();
-            return response()->json(['data' => BookResource::collection($book)],200);
+            if ($request->input('search')) {
+                $book = Book::where('title', '%'.$request->input('search').'%')->get();
+                return response()->json(['data' => BookResource::collection($book)],200);
+            }
+            else {
+                $book = Book::with('author', 'genre')->get();
+                return response()->json(['data' => BookResource::collection($book)],200);
+            }
         }
         catch (\Exception $e) {
             return response()->json(['error' => 'Server Error.'],500);
