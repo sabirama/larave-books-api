@@ -15,8 +15,13 @@ use Illuminate\Http\Request;
 class BookController extends Controller
 {
     public function index() {
-        $book = Book::with('author', 'genre')->get();
-        return response()->json(['data' => BookResource::collection($book)],200);
+        try {
+            $book = Book::with('author', 'genre')->get();
+            return response()->json(['data' => BookResource::collection($book)],200);
+        }
+        catch (\Exception $e) {
+            return response()->json(['error' => 'Server Error.'],500);
+        }
     }
 
     public function show($id) {
@@ -24,7 +29,7 @@ class BookController extends Controller
             $book = Book::with('author', 'genre')->find($id);
 
             if (!$book) {
-                return response()->json(['data' => 'Book does not exist!'], 200);
+                return response()->json(['data' => 'Book does not exist!'], 201);
             }
 
             return response()->json(['data' => new BookResource($book)],200);
