@@ -17,7 +17,7 @@ class BookController extends Controller
     public function index(Request $request) {
         try {
             if ($request->input('search')) {
-                $book = Book::where('title', '%'.$request->input('search').'%')->get();
+                $book = Book::where('title', 'like', '%'.$request->input('search').'%')->get();
                 return response()->json(['data' => BookResource::collection($book)],200);
             }
             else {
