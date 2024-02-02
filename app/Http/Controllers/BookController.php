@@ -15,18 +15,27 @@ use Illuminate\Http\Request;
 class BookController extends Controller
 {
     public function index(Request $request) {
+        $pageSize = $request->page_size ? $request->page_size : 50;
+        $pageNumber = $request->page_on ? $request->page_on : 1;
+
         try {
-            if ($request->input('search')) {
-                $book = Book::where('title', 'like', '%'.$request->input('search').'%')->get();
-                return response()->json(['data' => BookResource::collection($book)],200);
+            $booksQuery = Book::query();
+
+            if ($request->search) {
+                $searchQuery = $request->search;
+                $booksQuery->where('title', 'like', '%'.$searchQuery.'%');
             }
-            else {
-                $book = Book::with('author', 'genre')->get();
-                return response()->json(['data' => BookResource::collection($book)],200);
-            }
-        }
-        catch (\Exception $e) {
-            return response()->json(['error' => 'Server Error.'],500);
+
+            $books = $booksQuery->paginate($pageSize, ['*'], 'page', $pageNumber);
+            $books->load('author', 'genre');
+
+            $currentPage = $pageNumber;
+
+            $totalPages = $books->lastPage();
+
+            return response()->json(['data' => BookResource::collection($books), 'current_page' => $currentPage, 'total_pages' => $totalPages], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Server Error.'], 500);
         }
     }
 

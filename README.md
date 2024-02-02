@@ -38,6 +38,10 @@ book "Create (POST) a book or show (GET) all books in database."
     *author
     *genre
 
+book (GET) query parameters:
+    *page_size = [integer] the number of items in a page
+    *page_on = [integer] the current page to be requested
+
 book/{id} "Update (Put), Remove (DELETE) or Show a specific book."
     *title
     *details
