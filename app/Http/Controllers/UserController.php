@@ -4,12 +4,40 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserDetails;
-
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+
+    public function index($all) {
+
+        if ($all == 'all') {
+            try {
+                $user = User::join('user_details', 'users.id', '=', 'user_details.user_id')->get(['users.*', 'user_details.*']);
+                return response()->json(['data' => UserResource::collection($user)], 200);
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Server Error'], 500);
+            }
+        }
+
+        if (is_numeric($all)) {
+            try {
+                $user = User::join('user_details', 'users.id', '=', 'user_details.user_id')
+                    ->where('users.id', $all)
+                    ->first(); // Using first() to get a single model instance
+
+                if (!$user) {
+                    return response()->json(['message' => 'User not found.'], 404);
+                }
+
+                return response()->json(['data' => new UserResource($user)], 200);
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Server Error'], 500);
+            }
+        }
+    }
 
    public function userDetails(Request $request, $id) {
         try {

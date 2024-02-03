@@ -8,7 +8,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
-
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -44,13 +43,8 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function userDetails(): HasOne
+    public function userDetails() : HasOne
     {
-        return $this->hasOne(UserDetails::class, 'user_id', 'id');
-    }
-
-    public function rating(): HasMany
-    {
-        return $this->hasMany(Rating::class, 'user_id', 'id');
+        return $this->HasOne(UserDetails::class, 'user_id', 'id');
     }
 }

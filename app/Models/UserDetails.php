@@ -16,4 +16,6 @@ class UserDetails extends Model
         'address',
         'profile_image'
     ];
+
+
 }
