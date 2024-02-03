@@ -20,7 +20,7 @@ class RatingResource extends JsonResource
                 'id' => $this->id,
                 'user' => [
                     'id' => $this->user->id,
-                    'username' => $this->user->username
+                    'username' => $this->user->username,
                     ],
                 'rating' => $this->rate,
                 'comment' => $this->comment,
