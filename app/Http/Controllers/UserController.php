@@ -15,10 +15,10 @@ class UserController extends Controller
 
         if ($all == 'all') {
             try {
-                if (!$user) {
+                $user = User::with('userDetails')->get();
+                if ($user->count() === 0) {
                     return response()->json(['message' => 'No users yet.'], 404);
                 }
-                $user = User::with('userDetails')->get();
                 return response()->json(['data' => UserResource::collection($user)], 200);
             } catch (\Exception $e) {
                 return response()->json(['error' => 'Server Error'], 500);
