@@ -54,7 +54,7 @@ class RatingController extends Controller
             $rate = Rating::find($id);
 
             if(!$rate) {
-                return response()->json(['message' => 'Rate not found!'], 201);
+                return response()->json(['message' => 'Rate not found!'], 404);
             }
 
             $rate->update($request->all());
@@ -69,7 +69,7 @@ class RatingController extends Controller
         try {
             $rate = Rating::find($id);
             if (!$rate) {
-                return response()->json(['message' => 'Rate not found!'], 201);
+                return response()->json(['message' => 'Rate not found!'], 404);
             }
             $rate->delete();
             return response()->json(['rate' => $rate, 'message' => 'Rate deleted!'], 200);

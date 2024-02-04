@@ -15,7 +15,10 @@ class UserController extends Controller
 
         if ($all == 'all') {
             try {
-                $user = User::join('user_details', 'users.id', '=', 'user_details.user_id')->get(['users.*', 'user_details.*']);
+                if (!$user) {
+                    return response()->json(['message' => 'No users yet.'], 404);
+                }
+                $user = User::with('userDetails')->get();
                 return response()->json(['data' => UserResource::collection($user)], 200);
             } catch (\Exception $e) {
                 return response()->json(['error' => 'Server Error'], 500);
@@ -23,10 +26,9 @@ class UserController extends Controller
         }
 
         if (is_numeric($all)) {
+
             try {
-                $user = User::join('user_details', 'users.id', '=', 'user_details.user_id')
-                    ->where('users.id', $all)
-                    ->first(); // Using first() to get a single model instance
+                $user = User::with('userDetails')->find($all);
 
                 if (!$user) {
                     return response()->json(['message' => 'User not found.'], 404);

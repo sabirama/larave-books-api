@@ -12,38 +12,30 @@ class AuthController extends Controller
 {
     public function authUser(Request $request, $action) {
         try {
-            $request->validate([
+
+            $validation = $request->validate([
                 'username' => 'string|required|min:8',
-                'password' => 'string' . ($action == 'logout' ? '' : '|required'),
+                'password' => 'string' . ($action == ('login' | 'register') ? '|required' : ''),
                 'email' => 'email' . ($action == 'register' ? '|required' : ''),
             ]);
 
-            $user = null;
-            $token = null;
-
-            if ($action == 'register') {
-                try {
-                    $user = User::create($request->all());
-                    $token = $user->createToken('login-token')->plainTextToken;
-                }  catch (\Exception $e) {
-                    return response()->json(['error'=>'Database Error']);
-                }
-            }
-
             if ($action == 'login') {
-                try {
-                    $user = User::where('username', $request->username)->first();
+                $user = User::where('username', $request->input('username'))->first();
+                if(!$user) {
+                    return response()->json(['message' => 'User not found.'],404);
+                }
 
-                if (!$user || !Hash::check($request->password, $user->password)) {
-                    return response()->json(['error' => 'Invalid credentials'], 401);
-                }
-                $token = $user->createToken('login-token')->plainTextToken;
-                } catch (\Exception $e) {
-                    return response()->json(['error'=> 'Database Error']);
-                }
+                $token = $user->createToken('user-token')->plainTextToken;
+                return response()->json(['user'=>$user, 'token'=>$token],200);
             }
-
-            return response()->json(['user' => $user, 'token' => $token]);
+            else if ($action == 'register') {
+                $user = User::create($request->all());
+                if(!$user) {
+                    return response()->json(['message' => 'Registration failed.'], 300);
+                }
+                $token = $user->createToken('user-token')->plainTextToken;
+                return response()->json(['user'=>$user,'token'=>$token],200);
+            }
 
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -55,8 +47,8 @@ class AuthController extends Controller
                 $user = User::where('username', $request->username)->first();
 
             if ($user) {
-                $user->tokens()->where('name', 'login-token')->delete();
-                return response()->json(['message' => 'Logout successful']);
+                $user->tokens()->where('name', 'user-token')->delete();
+                return response()->json(['message' => 'Logout successful'],200);
             } else {
                 return response()->json(['error' => 'Invalid user'], 401);
             }

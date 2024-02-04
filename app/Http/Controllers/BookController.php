@@ -44,7 +44,7 @@ class BookController extends Controller
             $book = Book::with('author', 'genre', 'rating')->find($id);
 
             if (!$book) {
-                return response()->json(['data' => 'Book does not exist!'], 201);
+                return response()->json(['data' => 'Book does not exist!'], 404);
             }
 
             return response()->json(['data' => new BookResource($book)],200);
@@ -112,7 +112,7 @@ class BookController extends Controller
                     ]);
                     return response()->json(['message' => 'Cover image added to book.'], 200);
                 }
-                return response()->json(['message' => 'Book does not exist'], 201);
+                return response()->json(['message' => 'Book does not exist'], 404);
            }
 
            return response()->json(['message' => 'Not a valid image. Supported files are jpg, jpeg and png.'], 201);
