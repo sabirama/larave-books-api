@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\UserDetails;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -43,7 +44,7 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function userDetails() : HasOne
+    public function userDetails () : HasOne
     {
         return $this->HasOne(UserDetails::class, 'user_id', 'id');
     }

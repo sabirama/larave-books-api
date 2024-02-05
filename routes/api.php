@@ -18,11 +18,8 @@ use App\Http\Controllers\RatingController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user()->load('userDetails');
-});
-
 Route::group(['middleware' => 'auth:sanctum'], function() {
+
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/{id}', [UserController::class, 'userDetails']);
     Route::put('/user/{id}', [UserController::class, 'updateUserDetails']);

@@ -31,14 +31,14 @@ class AuthController extends Controller
             else if ($action == 'register') {
                 $user = User::create($request->all());
                 if(!$user) {
-                    return response()->json(['message' => 'Registration failed.'], 300);
+                    return response()->json(['message' => 'Registration failed.'], 401);
                 }
                 $token = $user->createToken('user-token')->plainTextToken;
                 return response()->json(['user'=>$user,'token'=>$token],200);
             }
 
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Server Error'], 500);
         }
     }
 
@@ -53,7 +53,7 @@ class AuthController extends Controller
                 return response()->json(['error' => 'Invalid user'], 401);
             }
             } catch (\Exception $e) {
-                return response()->json(['error' => 'Database Error'], 500);
+                return response()->json(['error' => 'Server Error'], 500);
             }
     }
 }

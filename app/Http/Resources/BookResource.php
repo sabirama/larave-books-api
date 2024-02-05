@@ -20,19 +20,19 @@ class BookResource extends JsonResource
             'details' => $this->details,
             'price' => $this->price,
             'cover_image' => $this->cover_image,
-            'author' => $this->author->map(function ($auth) {
+            'author' => $this->author?->map(function ($auth) {
                 return [
                     'id' => $auth->id,
                     'name' => $auth->name
                 ];
             }),
-            'genre' => $this->genre->map(function ($gen) {
+            'genre' => $this->genre?->map(function ($gen) {
                 return [
                     'id' => $gen->id,
                     'name' => $gen->name
                 ];
             }),
-            'rating' => $this->rating->map(function ($rate) {
+            'rating' => $this->rating?->map(function ($rate) {
                 return [
                     'id' => $rate->id,
                     'user_id' => $rate->user_id,

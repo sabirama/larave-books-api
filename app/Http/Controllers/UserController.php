@@ -11,93 +11,94 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
 
-    public function index($all) {
+    public function index(Request $request, $all) {
+        $pageSize = $request->page_size ? $request->page_size : 50;
+        $pageNumber = $request->page_on ? $request->page_on : 1;
 
         if ($all == 'all') {
             try {
-                $user = User::with('userDetails')->get();
-                if ($user->count() === 0) {
+                $users = User::with('userDetails');
+
+                if ($users->count() === 0) {
                     return response()->json(['message' => 'No users yet.'], 404);
                 }
-                return response()->json(['data' => UserResource::collection($user)], 200);
+
+                $users = $users->paginate($pageSize, ['*'], 'page', $pageNumber);
+
+
+                $currentPage = $pageNumber;
+                $totalPages = $users->lastPage();
+
+                return response()->json(['data' => UserResource::collection($users), 'current_page' => $currentPage, 'total_page' => $totalPages ], 200);
+
             } catch (\Exception $e) {
                 return response()->json(['error' => 'Server Error'], 500);
             }
         }
 
-        if (is_numeric($all)) {
-
+        else if (is_numeric($all)) {
             try {
-                $user = User::with('userDetails')->find($all);
+                $user = User::find($all)->load('userDetails');
 
                 if (!$user) {
                     return response()->json(['message' => 'User not found.'], 404);
                 }
 
-                return response()->json(['data' => new UserResource($user)], 200);
+                return response()->json(['data' => new USerResource($user)], 200);
             } catch (\Exception $e) {
                 return response()->json(['error' => 'Server Error'], 500);
             }
+        }
+
+        else {
+            return response()->json(['message' => 'Not a valid Input'], 401);
         }
     }
 
    public function userDetails(Request $request, $id) {
         try {
-            $user = User::find($id)->first();
+            $user = UserDetails::where('user_id', $id)->first();
 
-            if ($user) {
+            if (!$user) {
+                $createUserDetails = UserDetails::create([
+                    'user_id' => $id,
+                    'first_name' => $request->input('first_name'),
+                    'last_name' => $request->input('last_name'),
+                    'address' => $request->input('address'),
+                ]);
 
-                $userDetails = userDetails::where('user_id', $id)->first();
-
-                if ($userDetails) {
-                   $validImage = $request->validate(['image' => 'mimes:jpeg,png,jpg']);
-
-                    if($request->hasFile('image')){
-
-                        if (Storage::exists('/public/user/'.$id)) {
-                            Storage::deleteDirectory('/public/user/'.$id);
-                        }
-
-                        $file = $request->file('image');
-                        $filename = 'user-' . $id . "-profile-" . date('M-D-Y') . time() . '.' .$file->getClientOriginalExtension();
-                        $file->storeAs('public/user/'.$id.'/',$filename);
-                        $filepath = '/storage/user/'.$id.'/'.$filename;
-                    }
-
-                    $validImage ? $image = $userDetails->update(['profile_image' => $filepath]) : $image = 'not a valid image';
-                }
-
-                if(!$userDetails && ( $request->input('first_name') || $request->input('last_name') || $request->input('address') )) {
-                    ($request->input('image') != null) ? $profile = $request->input('image')
-                    : $profile = null;
-
-                    $createUserDetails = UserDetails::create([
-                        'user_id' => $id,
-                        'first_name' => $request->input('first_name'),
-                        'last_name' => $request->input('last_name'),
-                        'address' => $request->input('address'),
-                        'profile_image' =>$filepath
-                    ]);
-                }
-
-
-                $image ? $image = ['image_path' => $userDetails->profile_image] : null;
-                $createUserDetails ?? $message = ['message' => 'User details already exist! You might want to update user details.'];
-
-                return response()->json([$message , $image], 201);
-            }
-            else {
-                return response()->json(['message' => 'User does not exist! Please create user or input the correct user Id.'], 201);
+                return response()->json(['data' => $createUserDetails],200);
             }
 
-            return response()->json([$createUserDetails],200);
+            else if ($request->hasFile('image')){
+                $validImage = $request->validate(['image' => 'mimes:jpeg,png,jpg']);
 
+                if ($validImage) {
+
+                         if (Storage::exists('/public/user/'.$id)) {
+                             Storage::deleteDirectory('/public/user/'.$id);
+                         }
+
+                         $file = $request->file('image');
+                         $filename = 'user-' . $id . "-profile-" . date('M-D-Y') . time() . '.' .$file->getClientOriginalExtension();
+                         $file->storeAs('public/user/'.$id.'/',$filename);
+                         $filepath = '/storage/user/'.$id.'/'.$filename;
+
+                         $user->update([
+                            $request->all(),
+                            'profile_image' => $filepath]);
+                         return response()->json(['message' => 'Profile image added to user.'], 200);
+                }
+
+                else {
+                    return response()->json(['message' => 'Error updating user.'], 401);
+                }
         }
-
+    }
         catch (\Exceptions $e) {
             return response()->json(['error' => 'Server Error'],500);
         }
-   }
+    }
 
    public function updateUserDetails(Request $request, $id)
     {
@@ -112,7 +113,6 @@ class UserController extends Controller
                     'last_name' => $request->input('last_name'),
                     'address' => $request->input('address'),
                 ]);
-
                 return response()->json(['data' => $userDetails], 200);
 
             } else {
