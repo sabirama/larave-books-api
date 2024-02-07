@@ -14,7 +14,8 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         $pageSize = $request->page_size ? $request->page_size : 50;
         $pageNumber = $request->page_on ? $request->page_on : 1;
 
@@ -23,7 +24,7 @@ class BookController extends Controller
 
             if ($request->search) {
                 $searchQuery = $request->search;
-                $booksQuery->where('title', 'like', '%'.$searchQuery.'%');
+                $booksQuery->where('title', 'like', '%' . $searchQuery . '%');
             }
 
             $books = $booksQuery->paginate($pageSize, ['*'], 'page', $pageNumber);
@@ -33,136 +34,123 @@ class BookController extends Controller
 
             $totalPages = $books->lastPage();
 
-            return response()->json(['data' => BookResource::collection($books), 'current_page' => $currentPage, 'total_pages' => $totalPages], 200);
+            return response()->json([BookResource::collection($books), 'current_page' => $currentPage, 'total_pages' => $totalPages], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Server Error.'], 500);
+            return response()->json(['Server Error.'], 500);
         }
     }
 
-    public function show($id) {
+    public function show($id)
+    {
+
+        if ($id === 'genres') {
+            return response()->json([Genre::get('name')],200);
+        }
+
+        if ($id === 'authors') {
+            return response()->json([Author::get('name')],200);
+        }
         try {
             $book = Book::with('author', 'genre', 'rating')->find($id);
 
             if (!$book) {
-                return response()->json(['data' => 'Book does not exist!'], 404);
+                return response()->json(['message' => 'Book does not exist!'], 404);
             }
-
-            return response()->json(['data' => new BookResource($book)],200);
-        }
-        catch (Exceptions $e) {
-            return response()->json(['error' => 'Server Error.'],500);
+            return response()->json([new BookResource($book)], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Server Error.'], 500);
         }
     }
 
     public function create(Request $request)
     {
         try {
-            $book =  $book = Book::create($request->all());
+            $book = Book::create($request->all());
 
-            $author = $this->createOrFindAuthor($request->input('author'));
-            $genre = $this->createOrFindGenre($request->input('genre'));
+            if ($request->input('author')) {
+                //if there is author in request data
+                $author = $this->createOrFindAuthor($request->input('author'));
+                BookAuthors::create([
+                    'book_id' => $book->id,
+                    'author_id' => $author->id
+                ]);
+            }
 
-            //if there is author in request data
-            $request->input('author') ?
-            $bookAuthors = BookAuthors::create([
-                'book_id'=> $book->id,
-                'author_id'=>$author->id
-            ]) : $bookAuthors = null;
+            if ($request->input('genre')) {
+                //if there is genre in request data
+                $genre = $this->createOrFindGenre($request->input('genre'));
+                BookGenres::create([
+                    'book_id' => $book->id,
+                    'genre_id' => $genre->id
+                ]);
+            }
 
-            //if there is genre in request data
-            $request->input('genre') ? $bookGenres = BookGenres::create([
-                'book_id'=> $book->id,
-                'genre_id'=>$genre->id
-            ]) : $bookGenres = null;
-
-            $book = [
-                'title' => $book->title,
-                'details' => $book->details,
-                'price' => $book->price,
-                'author' => $author,
-                'genre' => $genre,
-
-            ];
-
-            return response()->json(['data'=> $book, 'message' => 'Book created!'], 200);
-        } catch (\Exceptions $e) {
+            return response()->json([new BookResource($book), 'message' => 'Book created!'], 200);
+        } catch (\Exception $e) {
             return response()->json(['error' => 'Server Error'], 500);
         }
     }
 
-    public function addCover(Request $request, $id) {
-        try {
-            $validImage = $request->validate(['image' => 'mimes:jpeg,png,jpg']);
 
-           if ($validImage) {
+    public function update(Request $request, $id)
+    {
+        try {
+            $book = Book::find($id);
+            if (!$book) {
+                return response()->json(['message' => 'Book not found.'], 404);
+            }
+
+            $book->update($request->all());
+
+            if ($request->input('author')) {
+                $author = $this->createOrFindAuthor($request->input('author'));
+                BookAuthors::firstOrCreate(['author_id' => $author->id, 'book_id' => $book->id]);
+            }
+
+            if ($request->input('genre')) {
+                $genre = $this->createOrFindGenre($request->input('genre'));
+                BookGenres::firstOrCreate(['genre_id' => $genre->id, 'book_id' => $book->id]);
+            }
+
+            return response()->json([new BookResource($book), 'message' => 'Book updated!'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['Server Error.'], 500);
+        }
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        try {
 
             $book = Book::find($id);
-                if ($book) {
-                    if (Storage::exists('/public/book/'.$id)) {
-                        Storage::deleteDirectory('/public/book/'.$id);
+            if (!$book) {
+                if ($id === 'authors') {
+                    $author = Author::where('name', $request->input('author'))->first();
+                    if (!$author) {
+                        return response()->json(['message' => 'Author does not exist.'], 404);
                     }
-
-                    $file = $request->file('image');
-                    $filename = 'book-' . $id . "-cover-" . date('M-D-Y') . time() . '.' .$file->getClientOriginalExtension();
-                    $file->storeAs('public/book/'.$id.'/',$filename);
-                    $filepath = '/storage/book/'.$id.'/'.$filename;
-
-                    $book->update([
-                        'cover_image' => $filepath
-                    ]);
-                    return response()->json(['message' => 'Cover image added to book.'], 200);
-                }
-                return response()->json(['message' => 'Book does not exist'], 404);
-           }
-
-           return response()->json(['message' => 'Not a valid image. Supported files are jpg, jpeg and png.'], 201);
-        }
-        catch (\Exception $e) {
-            return response()->json(['error' => 'Server Error.'], 500);
-        }
-    }
-
-    public function update(Request $request, $id) {
-        try {
-                $book = Book::find($id);
-                if (!$book) {
-                    return response()->json(['message' => 'book not found.'],404);
+                    $author->delete();
+                    return response()->json(['message' => 'Author deleted.'], 200);
                 }
 
-                if($request->input('title') || $request->input('details') || $request->input('price')) {
-                    $book->update($request->all());
+                if ($id === 'genres') {
+                    $genre = Genre::where('name', $request->input('genre'))->first();
+                    if (!$genre){
+                        return response()->json(['message' => 'Genre does not exist.'], 200);
+                    }
+                    $genre->delete();
+                    return response()->json(['message' => 'Genre deleted'], 200);
                 }
+                return response()->json(['message' => 'book not found.'], 404);
+            }
 
-                if ($request->author) {
-                    $author = $this->createOrFindAuthor($request->input('author'));
-                    $bookAuthors = BookAuthors::firstOrCreate(['author_id' => $author->id, 'book_id' => $book->id]);
-                }
-
-                if ($request->genre) {
-                    $genre = $this->createOrFindGenre($request->input('genre'));
-                    $bookGenres = BookGenres::firstOrCreate(['genre_id' => $genre->id, 'book_id'=> $book->id]);
-                }
-
-                return response()->json(['data' => new BookResource($book), 'message' => 'Book updated!'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Server Error.'], 500);
-        }
-    }
-
-    public function destroy(Request $request, $id) {
-
-        try {
-            $book = Book::find($id);
-           if (!$book) {
-                return response()->json(['message' => 'book not found.'],404);
-           }
-           $request->author ? $bookAuthors = BookAuthors::where('book_id', $id)->delete() : null;
-           $request->genre ? $bookGenre = BookGenres::where('book_id', $id)->delete() : null;
-           $book->delete();
-           return response()->json(['data' => $book, 'message' => 'Book removed!'], 200);
+            $request->author ? BookAuthors::where('book_id', $id)->delete() : null;
+            $request->genre ? BookGenres::where('book_id', $id)->delete() : null;
+            $book->delete();
+            return response()->json(['data' => new BookResource($book), 'message' => 'Book removed!'], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Server Error'], 500);
+            return response()->json(['Server Error'], 500);
         }
     }
 

@@ -18,14 +18,16 @@ use App\Http\Controllers\RatingController;
 |
 */
 
-Route::group(['middleware' => 'auth:sanctum'], function() {
+Route::group(['middleware' => 'auth:sanctum'], function () {
+    Route::get('/auth', function (Request $request) {
+        return response()->json([$request->user()], 200);
+    });
 
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/user/{id}', [UserController::class, 'userDetails']);
-    Route::put('/user/{id}', [UserController::class, 'updateUserDetails']);
+    Route::post('/user/{id}', [UserController::class, 'create']);
+    Route::put('/user/{id}', [UserController::class, 'update']);
 
     Route::post('/book', [BookController::class, 'create']);
-    Route::post('/book/{id}', [BookController::class, 'addCover']);
     Route::put('/book/{id}', [BookController::class, 'update']);
     Route::delete('/book/{id}', [BookController::class, 'destroy']);
 
@@ -41,4 +43,6 @@ Route::get('/book', [BookController::class, 'index']);
 
 Route::get('/rate/{id}', [RatingController::class, 'show']);
 Route::get('/rate', [RatingController::class, 'index']);
-Route::get('/user/{all}', [UserController::class, 'index']);
+
+Route::get('/user/{id}', [UserController::class, 'show']);
+Route::get('/user', [UserController::class, 'index']);
