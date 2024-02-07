@@ -23,11 +23,10 @@ class RatingController extends Controller
         }
     }
 
-
     public function rate($id) {
         try {
             $rate = Rating::find($id);
-            return response()->json([ new RatingResource($rate)],200);
+            return response()->json([$rate]);
         }
         catch(\Exception $e) {
             return response()->json(['Server Error.'], 500);
