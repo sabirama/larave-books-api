@@ -23,6 +23,16 @@ class RatingController extends Controller
         }
     }
 
+
+    public function rate($id) {
+        try {
+            $rate = Rating::find($id);
+            return response()->json([RatingResource::collection($rate)],200);
+        }
+        catch(\Exception $e) {
+            return response()->json(['Server Error.'], 500);
+        }
+    }
     public function show(Request $request, $id) {
         $pageSize = $request->page_size ? $request->page_size : 50;
         $pageNumber = $request->page_on ? $request->page_on : 1;

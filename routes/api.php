@@ -42,6 +42,7 @@ Route::get('/book/{id}', [BookController::class, 'show']);
 Route::get('/book', [BookController::class, 'index']);
 
 Route::get('/rate/{id}', [RatingController::class, 'show']);
+Route::get('/rating/{id}', [UserController::class, 'rate']);
 Route::get('/rate', [RatingController::class, 'index']);
 
 Route::get('/user/{id}', [UserController::class, 'show']);

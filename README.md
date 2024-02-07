@@ -55,6 +55,7 @@
     rate "Create (POST) or Show (GET) all ratings."
 
     rate/{id} "Update (PUT), Remove (DELETE), or Show a specific rate by book_id (GET)"
+    rating/{id} "(GET) specific rating by id."
     rate keys:
         *book_id = [integer]
         *user_id = [integer]
