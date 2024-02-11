@@ -22,19 +22,23 @@ class AuthController extends Controller
 
             if ($action == 'login') {
                 $user = User::where('username', $request->input('username'))->first();
-                if (!$user) {
-                    return response()->json(['message' => 'User not found.'], 404);
+                if (!$user || !Hash::check($request->input('password'), $user->password)) {
+                    return response()->json(['message' => 'Invalid username or password.'], 401);
                 }
+                $token = $user->createToken('user-token')->plainTextToken;
+                return response()->json(['user' => $user, 'token' => $token], 200);
 
-                $token = $user->createToken('user-token')->plainTextToken;
-                return response()->json(['user' => $user, 'token' => $token], 200);
             } else if ($action == 'register') {
-                $user = User::create($request->all());
+                $user = User::where('username', $request->input('username'));
                 if (!$user) {
-                    return response()->json(['message' => 'Registration failed.'], 401);
+                $user = User::create($request->all());
+                    if (!$user) {
+                        return response()->json(['message' => 'Registration failed.'], 401);
+                    }
+                    $token = $user->createToken('user-token')->plainTextToken;
+                    return response()->json(['user' => $user, 'token' => $token], 200);
                 }
-                $token = $user->createToken('user-token')->plainTextToken;
-                return response()->json(['user' => $user, 'token' => $token], 200);
+                return response()->json(['message'=>'User already exist.'],401);
             }
 
         } catch (\Exception $e) {
