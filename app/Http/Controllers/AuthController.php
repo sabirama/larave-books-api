@@ -29,16 +29,17 @@ class AuthController extends Controller
                 return response()->json(['user' => $user, 'token' => $token], 200);
 
             } else if ($action == 'register') {
-                $user = User::where('username', $request->input('username'));
-                if (!$user) {
-                $user = User::create($request->all());
-                    if (!$user) {
-                        return response()->json(['message' => 'Registration failed.'], 401);
-                    }
-                    $token = $user->createToken('user-token')->plainTextToken;
-                    return response()->json(['user' => $user, 'token' => $token], 200);
+                $user = User::where('username', $request->input('username'))->first();
+                if ($user) {
+                    return response()->json(['message'=>'User already exist.'],401);
+                } else {
+                $createUser = User::create($request->all());
+                if (!$createUser) {
+                    return response()->json(['message' => 'Registration failed.'], 401);
                 }
-                return response()->json(['message'=>'User already exist.'],401);
+                $token = $createUser->createToken('user-token')->plainTextToken;
+                return response()->json(['user' => $createUser, 'token' => $token], 200);
+            }
             }
 
         } catch (\Exception $e) {
