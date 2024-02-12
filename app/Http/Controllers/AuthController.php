@@ -22,9 +22,10 @@ class AuthController extends Controller
 
             if ($action == 'login') {
                 $user = User::where('username', $request->input('username'))->first();
-                if (!$user || $request->input('password', $user->password)) {
-                    return response()->json(['message' => 'Invalid username or password.'], 401);
+                if(!Hash::check($validation['password'], $user->password)) {
+                    return response (["Wrong Password"],401);
                 }
+
                 $token = $user->createToken('user-token')->plainTextToken;
                 return response()->json(['user' => $user, 'token' => $token], 200);
 
