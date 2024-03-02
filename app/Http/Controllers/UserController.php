@@ -64,11 +64,7 @@ class UserController extends Controller
             if ($user) {
                 $userDetails = UserDetails::where('user_id', $id)?->first();
 
-                $userDetails->update([
-                    'first_name' => $request->input('first_name'),
-                    'last_name' => $request->input('last_name'),
-                    'address' => $request->input('address'),
-                ]);
+                $userDetails->update($request->all());
                 return response()->json([$userDetails], 200);
 
             } else {
